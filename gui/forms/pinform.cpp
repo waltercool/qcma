@@ -21,7 +21,7 @@
 #include "ui_pinform.h"
 
 #include <QDebug>
-#include <QDesktopWidget>
+#include <QScreen>
 
 const QString PinForm::pinFormat =
     "<html><head/><body>"
@@ -33,10 +33,13 @@ PinForm::PinForm(QWidget *obj_parent) :
     ui(new Ui::PinForm)
 {
     ui->setupUi(this);
-    move(QApplication::desktop()->screen()->rect().center() - rect().center());
+    if (QScreen *screen = QGuiApplication::primaryScreen()) {
+        QRect screenGeometry = screen->geometry();
+        move(screenGeometry.center() - rect().center());
+    }
     setFixedSize(size());
     setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(hide()));
+    connect(ui->cancelButton, &QPushButton::clicked, this, &PinForm::hide);
 }
 
 void PinForm::setPin(QString name, int pin)
@@ -51,7 +54,7 @@ void PinForm::startCountdown()
 {
     timer.setInterval(1000);
     counter = 300;
-    connect(&timer, SIGNAL(timeout()), this, SLOT(decreaseTimer()));
+    connect(&timer, &QTimer::timeout, this, &PinForm::decreaseTimer);
     timer.start();
 }
 

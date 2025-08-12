@@ -19,7 +19,6 @@
 
 #include "backupmanagerform.h"
 #include "ui_backupmanagerform.h"
-#include "cmaobject.h"
 #include "sforeader.h"
 #include "confirmdialog.h"
 #include "cmautils.h"
@@ -50,8 +49,8 @@ BackupManagerForm::~BackupManagerForm()
 void BackupManagerForm::setupForm()
 {
     this->resize(800, 480);
-    connect(ui->backupComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(loadBackupListing(int)));
-    connect(ui->saveButton, SIGNAL(clicked()), this, SLOT(saveListing()));
+    connect(ui->backupComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &BackupManagerForm::loadBackupListing);
+    connect(ui->saveButton, &QPushButton::clicked, this, &BackupManagerForm::saveListing);
     ui->tableWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     ui->tableWidget->horizontalHeader()->hide();
 }
@@ -90,7 +89,7 @@ void BackupManagerForm::removeEntry(BackupItem *item)
     ConfirmDialog msgBox;
 
     msgBox.setMessageText(tr("Are you sure to remove the backup of the following entry?"), item->title);
-    msgBox.setMessagePixmap(*item->getIconPixmap(), item->getIconWidth());
+    msgBox.setMessagePixmap(item->getIconPixmap(), item->getIconWidth());
 
     if(msgBox.exec() == 0) {
         return;
@@ -190,11 +189,7 @@ void BackupManagerForm::loadBackupListing(int index)
     // adjust the table item width to fill all the widget
     QHeaderView *vert_header = ui->tableWidget->verticalHeader();
     QHeaderView *horiz_header = ui->tableWidget->horizontalHeader();
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     horiz_header->setSectionResizeMode(QHeaderView::Stretch);
-#else
-    horiz_header->setResizeMode(QHeaderView::Stretch);
-#endif
     qint64 backup_size = m_db->getObjectSize(ohfi);
     setBackupUsage(backup_size);
     QString path = m_db->getAbsolutePath(ohfi);
@@ -219,7 +214,7 @@ void BackupManagerForm::loadBackupListing(int index)
         item->ohfi = meta->ohfi;
         item->title = game_name;
 
-        connect(item, SIGNAL(deleteEntry(BackupItem*)), this, SLOT(removeEntry(BackupItem*)));
+        connect(item, &BackupItem::deleteEntry, this, &BackupManagerForm::removeEntry);
 
         // show better size info for multi GiB backups
         bool use_gb = ohfi == VITA_OHFI_BACKUP && meta->size > 1024*1024*1024;
@@ -254,7 +249,7 @@ void BackupManagerForm::loadBackupListing(int index)
 
     m_db->freeMetadata(first);
 
-    qSort(item_list.begin(), item_list.end(), BackupItem::lessThan);
+    std::sort(item_list.begin(), item_list.end(), BackupItem::lessThan);
 
     int row;
     QList<BackupItem *>::iterator it;

@@ -20,18 +20,21 @@
 #include "progressform.h"
 #include "ui_progressform.h"
 
-#include <QDesktopWidget>
 #include <QMessageBox>
+#include <QScreen>
 
 ProgressForm::ProgressForm(QWidget *obj_parent) :
     QWidget(obj_parent),
     ui(new Ui::ProgressForm)
 {
     ui->setupUi(this);
-    move(QApplication::desktop()->screen()->rect().center() - rect().center());
+    if (QScreen *screen = QGuiApplication::primaryScreen()) {
+        QRect screenGeometry = screen->geometry();
+        move(screenGeometry.center() - rect().center());
+    }
     setFixedSize(size());
     setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(cancelConfirm()));
+    connect(ui->cancelButton, &QPushButton::clicked, this, &ProgressForm::cancelConfirm);
 }
 
 ProgressForm::~ProgressForm()
@@ -67,7 +70,7 @@ void ProgressForm::showDelayed(int msec)
 {
     timer.setSingleShot(true);
     timer.setInterval(msec);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(show()));
+    connect(&timer, &QTimer::timeout, this, &ProgressForm::show);
     timer.start();
 }
 

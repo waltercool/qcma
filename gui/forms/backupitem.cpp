@@ -43,8 +43,8 @@ BackupItem::BackupItem(QWidget *obj_parent) :
 {
     ui->setupUi(this);
     // connect the buttons
-    connect(ui->openButton, SIGNAL(clicked()), this, SLOT(openDirectory()));
-    connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(removeEntry()));
+    connect(ui->openButton, &QPushButton::clicked, this, &BackupItem::openDirectory);
+    connect(ui->deleteButton, &QPushButton::clicked, this, &BackupItem::removeEntry);
 }
 
 BackupItem::~BackupItem()
@@ -62,7 +62,7 @@ void BackupItem::removeEntry()
     emit deleteEntry(this);
 }
 
-const QPixmap *BackupItem::getIconPixmap()
+const QPixmap BackupItem::getIconPixmap()
 {
     return ui->itemPicture->pixmap();
 }
